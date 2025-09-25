@@ -1,10 +1,11 @@
 import menu
 
 def network_menu():
-    options = ["DHCP", "Static IP", "Назад"]
+    options = ["iwd", "networkmanager", "none", "Назад"]
     while True:
         choice = menu.menu("Network Setup", options)
         if choice == -1 or options[choice] == "Назад":
-            break
-        print(f"Вы выбрали: {options[choice]}")
-        input("Нажмите Enter чтобы вернуться...")
+            return None
+        selected = options[choice]
+        # возвращаем выбранное значение
+        return selected
