@@ -9,7 +9,7 @@ selected_values = {
 
 def main():
     toggles = {1: False}
-    options = ["Disk Configuration", "Enable Feature X", "Network", "Exit"]
+    options = ["Disk Configuration", "Enable arcat-repo", "Network", "Exit"]
     descriptions = {
         0: "Настройка разметки дисков\nи установка загрузчика",
         1: "Тест кнопки включения",
