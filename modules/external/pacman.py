@@ -3,6 +3,12 @@ import subprocess
 from dataclasses import dataclass
 from exceptions.pacman import PacmanError
 
+_extra_args: list[str] = []
+
+def set_global_args(*args):
+    global _extra_args
+    _extra_args = list(args)
+
 @dataclass
 class PackageInfo:
     name: str
@@ -14,10 +20,11 @@ class PackageInfo:
     build_date: str = ""
     install_date: str = ""
 
-def _run(args):
+def _run(args, extra_args=None):
+    final_args = ["pacman"] + _extra_args + (extra_args or []) + args
     try:
         result = subprocess.run(
-            ["pacman"] + args,
+            final_args,
             check=True,
             capture_output=True,
             text=True
@@ -26,29 +33,33 @@ def _run(args):
     except subprocess.CalledProcessError as e:
         raise PacmanError(e.stderr.strip())
 
-def install(*packages, yes=True):
+# === базовые операции ===
+
+def install(*packages, yes=True, extra_args=None):
     args = ["-S"]
     if yes:
         args.append("--noconfirm")
-    return _run(args + list(packages))
+    return _run(args + list(packages), extra_args=extra_args)
 
-def remove(*packages, yes=True):
+def remove(*packages, yes=True, extra_args=None):
     args = ["-R"]
     if yes:
         args.append("--noconfirm")
-    return _run(args + list(packages))
+    return _run(args + list(packages), extra_args=extra_args)
 
-def update(yes=True):
+def update(yes=True, extra_args=None):
     args = ["-Syu"]
     if yes:
         args.append("--noconfirm")
-    return _run(args)
+    return _run(args, extra_args=extra_args)
 
-def search(query):
-    out = _run(["-Ss", query])
+# === информация ===
+
+def search(query, extra_args=None):
+    out = _run(["-Ss", query], extra_args=extra_args)
     results = []
     for line in out.splitlines():
-        if line.startswith(" "):  # описание пакета
+        if line.startswith(" "):
             results[-1][-1] += " " + line.strip()
         else:
             parts = line.split()
@@ -57,8 +68,8 @@ def search(query):
             results.append([repo, name, version, desc])
     return results
 
-def info(package):
-    out = _run(["-Qi", package])
+def info(package, extra_args=None):
+    out = _run(["-Qi", package], extra_args=extra_args)
     data = {}
     for line in out.splitlines():
         if ":" in line:
@@ -75,26 +86,26 @@ def info(package):
         install_date=data.get("Install Date", ""),
     )
 
-def list_installed():
-    out = _run(["-Qe"])
+def list_installed(extra_args=None):
+    out = _run(["-Qe"], extra_args=extra_args)
     return [tuple(line.split()) for line in out.splitlines()]
 
-def list_outdated():
-    out = _run(["-Qu"])
+def list_outdated(extra_args=None):
+    out = _run(["-Qu"], extra_args=extra_args)
     return [tuple(line.split()[:2]) for line in out.splitlines()]
 
-def list_files(package):
-    out = _run(["-Ql", package])
+def list_files(package, extra_args=None):
+    out = _run(["-Ql", package], extra_args=extra_args)
     return [line.split(None, 1)[1] for line in out.splitlines()]
 
-def owns(file_path):
-    out = _run(["-Qo", file_path])
+def owns(file_path, extra_args=None):
+    out = _run(["-Qo", file_path], extra_args=extra_args)
     parts = out.split()
     return parts[1] if len(parts) > 1 else None
 
-def is_installed(package):
+def is_installed(package, extra_args=None):
     try:
-        _run(["-Qi", package])
+        _run(["-Qi", package], extra_args=extra_args)
         return True
     except PacmanError:
         return False
