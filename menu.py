@@ -84,6 +84,51 @@ def menu(title, options, selected=0, toggles=None, descriptions=None, dynamic_de
         elif key == '\x1b':
             return -1
 
+def text_input_menu(title="", dynamic_description_func=None):
+    """
+    Интерактивный ввод текста с динамическим описанием справа.
+    dynamic_description_func(text) -> str
+    """
+    text = ""
+    while True:
+        clear()
+        width, height = shutil.get_terminal_size((80, 20))
+        col_split = width // 2
+        right_width = width - col_split
+
+        # заголовок
+        if title:
+            print(title)
+            print("-" * width)
+
+        # левая колонка: текущий ввод
+        print(color_text("> " + text, fg="green", bold=True).ljust(col_split))
+
+        # правая колонка: динамическое описание
+        if dynamic_description_func:
+            desc_lines = dynamic_description_func(text).split("\n")
+        else:
+            desc_lines = []
+
+        for idx in range(max(len(desc_lines), 1)):
+            line = desc_lines[idx] if idx < len(desc_lines) else ""
+            padded = line.ljust(right_width)
+            sys.stdout.write(f"\033[{idx+3};{col_split+1}H")
+            sys.stdout.write(color_text(padded, fg="white", bg="blue") + "\n")
+
+        # считываем один символ
+        key = getch()
+        if key in ('\r', '\n'):
+            if text.strip():
+                return text
+        elif key == '\x7f':  # backspace
+            text = text[:-1]
+        elif key == '\x03':  # ctrl-c
+            print("\nОтменено")
+            return ""
+        else:
+            text += key
+
 def reset_console():
     clear()
     sys.stdout.write("\033[0m")
