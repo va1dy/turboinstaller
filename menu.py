@@ -26,110 +26,117 @@ def getch():
         termios.tcsetattr(fd, termios.TCSADRAIN, old)
     return ch
 
+def draw_description(desc_text, col_split):
+    width, _ = shutil.get_terminal_size()
+    right_width = width - col_split
+
+    if not desc_text.strip():
+        return  # если текста нет, не рисуем
+
+    # авто-ломка длинных строк
+    lines = []
+    for line in desc_text.split("\n"):
+        while len(line) > right_width - 2:
+            lines.append(line[:right_width-2])
+            line = line[right_width-2:]
+        lines.append(line)
+
+    # добавляем пустую строку сверху и снизу
+    lines = [""] + lines + [""]
+
+    # выводим справа через пробелы
+    for line in lines:
+        print(" " * col_split + color_text(line.ljust(right_width), fg="white", bg="blue"))
+
 def menu(title, options, selected=0, toggles=None, descriptions=None, dynamic_description=None):
     """
     Меню с описанием справа.
     :param toggles: dict {index: bool}
     :param descriptions: dict {index: str} - обычное описание
-    :param dynamic_description: str - если задано, показывается справа вместо описания
+    :param dynamic_description: dict {index: str} - динамическое описание справа
     """
     toggles = toggles or {}
     descriptions = descriptions or {}
 
     while True:
         clear()
-        width, height = shutil.get_terminal_size((80, 20))
+        width, _ = shutil.get_terminal_size()
         col_split = width // 2
-        right_width = width - col_split
 
         if title:
             print(title)
             print("-" * width)
 
+        # вывод меню слева
         for i, opt in enumerate(options):
-            # индикатор [ON]/[OFF]
             prefix = ""
             if i in toggles:
                 prefix = color_text("[ON]", fg="black", bg="green") + " " if toggles[i] else color_text("[OFF]", fg="white", bg="red") + " "
-            # текст пункта
-            text = f"{prefix}{opt}"
             if i == selected:
                 line = f"{prefix}{color_text(opt, fg='black', bg='green', bold=True)}"
             else:
-                line = text
-            print(line.ljust(col_split))
+                line = f"{prefix}{opt}"
+            print(line)
 
         # описание справа
-        if dynamic_description is not None:
-            desc_lines = dynamic_description.split("\n")
+        desc_to_show = ""
+        if dynamic_description and selected in dynamic_description:
+            desc_to_show = dynamic_description[selected]
         else:
-            desc_lines = descriptions.get(selected, "").split("\n")
+            desc_to_show = descriptions.get(selected, "")
+        draw_description(desc_to_show, col_split)
 
-        for idx in range(len(desc_lines)):
-            line = desc_lines[idx]
-            padded = line.ljust(right_width - 2)  # оставляем небольшой отступ справа
-            sys.stdout.write(f"\033[{idx + 3};{col_split + 2}H")  # +2 для отступа
-            sys.stdout.write(color_text(padded, fg="white", bg="blue") + "\033[0m")
-
+        # обработка клавиш
         key = getch()
-        if key == '\x1b[A':
+        if key == '\x1b[A':  # стрелка вверх
             selected = (selected - 1) % len(options)
-        elif key == '\x1b[B':
+        elif key == '\x1b[B':  # стрелка вниз
             selected = (selected + 1) % len(options)
         elif key in ('\r', '\n'):
             if selected in toggles:
                 toggles[selected] = not toggles[selected]
             else:
                 return selected
-        elif key == '\x1b':
+        elif key == '\x1b':  # ESC
             return -1
-
-def text_input_menu(title="", dynamic_description_func=None):
-    """
-    Интерактивный ввод текста с динамическим описанием справа.
-    dynamic_description_func(text) -> str
-    """
-    text = ""
-    while True:
-        clear()
-        width, height = shutil.get_terminal_size((80, 20))
-        col_split = width // 2
-        right_width = width - col_split
-
-        # заголовок
-        if title:
-            print(title)
-            print("-" * width)
-
-        # левая колонка: текущий ввод
-        print(color_text("> " + text, fg="green", bold=True).ljust(col_split))
-
-        # правая колонка: динамическое описание
-        if dynamic_description_func:
-            desc_lines = dynamic_description_func(text).split("\n")
-        else:
-            desc_lines = []
-
-        for idx in range(max(len(desc_lines), 1)):
-            line = desc_lines[idx] if idx < len(desc_lines) else ""
-            padded = line.ljust(right_width)
-            sys.stdout.write(f"\033[{idx+3};{col_split+1}H")
-            sys.stdout.write(color_text(padded, fg="white", bg="blue") + "\n")
-
-        # считываем один символ
-        key = getch()
-        if key in ('\r', '\n'):
-            if text.strip():
-                return text
-        elif key == '\x7f':  # backspace
-            text = text[:-1]
-        elif key == '\x03':  # ctrl-c
-            print("\nОтменено")
-            return ""
-        else:
-            text += key
 
 def reset_console():
     clear()
     sys.stdout.write("\033[0m")
     sys.stdout.flush()
+
+
+# =========================
+# пример использования
+# =========================
+if __name__ == "__main__":
+    try:
+        clear()
+        toggles = {1: False}
+        options = ["Disk Configuration", "Enable trojan-repo", "Network", "Exit"]
+        descriptions = {
+            0: "Настройка разметки дисков\nи установка загрузчика",
+            1: "Тест кнопки включения",
+            2: "Настройка сети (Выбрать сетевой менеджер)",
+            3: "Выход из программы"
+        }
+        dynamic_desc = {}
+
+        while True:
+            banner = r"""
+             _____ _     ____  ____  ____  _  _      ____ _____ ____  _     _     _____ ____ 
+            /__ __Y \ /\/  __\/  _ \/  _ \/ \/ \  /|/ ___Y__ __Y  _ \/ \   / \   /  __//  __\
+              / \ | | |||  \/|| | //| / \|| || |\ |||    \ / \ | / \|| |   | |   |  \  |  \/|
+              | | | \_/||    /| |_\\| \_/|| || | \||\___ | | | | |-||| |_/\| |_/\|  /_ |    /
+              \_/ \____/\_/\_\\____/\____/\_/\_/  \|\____/ \_/ \_/ \|\____/\____/\____\\_/\_\
+            """
+            choice = menu(banner, options, toggles=toggles, descriptions=descriptions, dynamic_description=dynamic_desc)
+            if choice == -1 or options[choice] == "Exit":
+                break
+            elif options[choice] == "Enable trojan-repo":
+                toggles[1] = not toggles[1]
+            else:
+                print(f"Вы выбрали: {options[choice]}")
+                input("Нажмите Enter, чтобы вернуться в меню...")
+    finally:
+        reset_console()
