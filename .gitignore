@@ -1,1 +1,32 @@
-.idea
+# ide / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# python stuff
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+.eggs/
+*.manifest
+*.spec
+
+# build / dist
+build/
+dist/
+*.egg
+*.wheel
+
+# virtual envs
+.venv/
+venv/
+env/
+ENV/
+
+# os trash
+.DS_Store
+Thumbs.db
