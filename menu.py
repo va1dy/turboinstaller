@@ -5,7 +5,8 @@ import easter_eggs
 FG = {"black":30,"red":31,"green":32,"yellow":33,"blue":34,"magenta":35,"cyan":36,"white":37}
 BG = {"black":40,"red":41,"green":42,"yellow":43,"blue":44,"magenta":45,"cyan":46,"white":47}
 sequence = []
-some_numbers = ['1','4', '8', '8']
+some_numbers = "1 4 8 8".split()
+bad_apple = "b a".split()
 
 def color_text(text, fg=None, bg=None, bold=False):
     codes = []
@@ -96,10 +97,16 @@ def menu(title, options, selected=0, toggles=None, descriptions=None, dynamic_de
 
         if len(sequence) > len(some_numbers):
             sequence.pop(0)
+        if len(sequence) > len(bad_apple):
+            sequence.pop(0)
 
         if sequence == some_numbers:
             clear()
             easter_eggs.poshalko()
+            sequence.clear()
+        if sequence == bad_apple:
+            clear()
+            easter_eggs.ba_poshalko()
             sequence.clear()
 
         if key == '\x1b[A':  # стрелка вверх
