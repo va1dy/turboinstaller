@@ -65,11 +65,11 @@ def menu(title, options, selected=0, toggles=None, descriptions=None, dynamic_de
         else:
             desc_lines = descriptions.get(selected, "").split("\n")
 
-        for idx in range(max(len(desc_lines), len(options))):
-            line = desc_lines[idx] if idx < len(desc_lines) else ""
-            padded = line.ljust(right_width)
-            sys.stdout.write(f"\033[{idx+3};{col_split+1}H")
-            sys.stdout.write(color_text(padded, fg="white", bg="blue") + "\n")
+        for idx in range(len(desc_lines)):
+            line = desc_lines[idx]
+            padded = line.ljust(right_width - 2)  # оставляем небольшой отступ справа
+            sys.stdout.write(f"\033[{idx + 3};{col_split + 2}H")  # +2 для отступа
+            sys.stdout.write(color_text(padded, fg="white", bg="blue") + "\033[0m")
 
         key = getch()
         if key == '\x1b[A':

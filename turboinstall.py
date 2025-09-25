@@ -9,7 +9,7 @@ selected_values = {
 
 def main():
     toggles = {1: False}
-    options = ["Disk Configuration", "Enable arcat-repo", "Network", "Exit"]
+    options = ["Disk Configuration", "Enable trojan-repo", "Network", "Exit"]
     descriptions = {
         0: "Настройка разметки дисков\nи установка загрузчика",
         1: "Тест кнопки включения",
@@ -38,7 +38,7 @@ def main():
         elif options[choice] == "Disk Configuration":
             sel = disks.disk_menu()
             if sel is not None:
-                selected_values["Disk Configuration"] = sel
+                selected_values["Disk Configuration"] = sel  # сохраняем лог команд
         elif options[choice] == "Network":
             sel = network.network_menu()
             if sel is not None:
