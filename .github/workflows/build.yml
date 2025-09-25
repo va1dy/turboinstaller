@@ -1,8 +1,8 @@
-name: Build Discord.fun
+name: Build turboinstaller
 
 on:
   push:
-    branches: [ v2 ]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
