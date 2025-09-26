@@ -58,5 +58,5 @@ def poshalko():
             break
 
 def ba_poshalko():
-    ba.ba_loop()
+    ba.bad_apple()
     return
